@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ULAR PEMBURU ZAKAT MAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4ADE80;
+            --secondary: #3B82F6;
+            --accent: #FBBF24;
+            --danger: #EF4444;
+            --dark: #1E293B;
+            --light: #F8FAFC;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #87CEEB; /* Sky blue */
+            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: moveClouds linear infinite;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        @keyframes moveClouds {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-200px); }
+        }
+        
+        .leaf {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #22c55e;
+            border-radius: 15px 0;
+            opacity: 0.7;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg) translateX(0); }
+            100% { transform: translateY(100vh) rotate(360deg) translateX(50px); opacity: 0; }
+        }
+
+        .wave-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .wave {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%233B82F6" fill-opacity="0.8" d="M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x;
+            background-size: 50% 100%;
+            animation: waveAnim 10s linear infinite;
+        }
+        .wave:nth-child(2) {
+            bottom: -10px;
+            opacity: 0.5;
+            animation: waveAnim 15s linear infinite reverse;
+        }
+        @keyframes waveAnim {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .game-layer {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .platform {
+            background: linear-gradient(#8B4513, #5C4033);
+            border-radius: 20px 20px 10px 10px;
+            box-shadow: 0 10px 0 #3E2723, 0 15px 15px rgba(0,0,0,0.3);
+            border-top: 10px solid #22c55e;
+            transition: all 1s ease-in-out;
+        }
+
+        .character {
+            font-size: 4rem;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            transition: all 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.5s; }
+
+        @keyframes jumpToMouse {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(150px, -80px) scale(1.2); }
+            100% { transform: translate(300px, 0) scale(1); }
+        }
+        .snake-jump { animation: jumpToMouse 0.6s forwards; }
+
+        @keyframes laugh {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .mouse-laugh { animation: laugh 0.3s infinite; }
+
+        @keyframes flash {
+            0% { background-color: rgba(255, 255, 0, 0); }
+            50% { background-color: rgba(255, 255, 0, 0.6); }
+            100% { background-color: rgba(255, 255, 0, 0); }
+        }
+        .flash-overlay {
+            position: absolute; inset: 0; pointer-events: none; z-index: 50; display: none;
+        }
+        .flash-active { display: block; animation: flash 0.5s; }
+
+        .btn {
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 4px solid white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .screen {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 20;
+            transition: opacity 0.5s;
+        }
+        .hidden-screen { opacity: 0; pointer-events: none; z-index: -1; }
+
+        .confetti {
+            position: absolute; width: 10px; height: 10px; z-index: 100;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Background Animations -->
+    <div id="clouds-container"></div>
+    <div id="leaves-container"></div>
+    <div class="wave-container">
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+    <div id="flash-effect" class="flash-overlay"></div>
+
+    <!-- UI Controls (Top Right) -->
+    <div class="absolute top-4 right-4 z-50 flex gap-2">
+        <button id="btn-audio" class="w-12 h-12 bg-white rounded-full flex items-center justify-center btn text-2xl" onclick="toggleAudio()">
+            🔊
+        </button>
+        <button id="btn-fullscreen" class="w-12 h-12 bg-white rounded-full flex items-center justify-center btn text-2xl" onclick="toggleFullscreen()">
+            ⛶
+        </button>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="screen-menu" class="screen">
+        <div class="glass-panel rounded-3xl p-8 max-w-lg w-[90%] text-center">
+            <h1 class="text-4xl md:text-5xl text-blue-600 mb-2 font-display">ULAR PEMBURU <br><span class="text-green-500">ZAKAT MAL</span></h1>
+            <p class="text-xl font-bold text-gray-600 mb-6">🐍🐭 Petualangan Seru Menjadi Juara Zakat!</p>
+            
+            <div class="flex flex-col gap-4">
+                <button onclick="startGame()" class="btn bg-green-500 hover:bg-green-600 text-white font-display text-2xl py-4 rounded-xl">
+                    MULAI BERMAIN
+                </button>
+                <button onclick="showScreen('screen-material')" class="btn bg-blue-400 hover:bg-blue-500 text-white font-bold text-xl py-3 rounded-xl">
+                    MATERI ZAKAT MAL
+                </button>
+                <button onclick="showScreen('screen-help')" class="btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold text-xl py-3 rounded-xl">
+                    PETUNJUK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Screen -->
+    <div id="screen-material" class="screen hidden-screen">
+        <div class="glass-panel rounded-3xl p-6 max-w-2xl w-[90%] max-h-[80vh] flex flex-col">
+            <h2 class="text-3xl font-display text-blue-600 mb-4 text-center">📖 Materi Zakat Mal</h2>
+            <div class="overflow-y-auto pr-2 text-lg leading-relaxed flex-1">
+                <p><strong>Zakat Mal</strong> adalah zakat atas harta kekayaan tertentu yang wajib dikeluarkan oleh seorang Muslim apabila telah memenuhi syarat.</p>
+                <ul class="list-disc pl-6 mt-2 space-y-2">
+                    <li><strong>Muzaki:</strong> Orang yang wajib membayar zakat.</li>
+                    <li><strong>Mustahik:</strong> Orang yang berhak menerima zakat (ada 8 golongan/asnaf seperti Fakir, Miskin, Amil, Muallaf, dll).</li>
+                    <li><strong>Nisab:</strong> Batas jumlah minimal harta yang wajib dizakati.</li>
+                    <li><strong>Haul:</strong> Masa kepemilikan harta selama satu tahun penuh.</li>
+                </ul>
+                <p class="mt-4"><strong>Contoh Zakat:</strong></p>
+                <ul class="list-disc pl-6 mt-2">
+                    <li>Emas, Perak, Uang Simpanan: Zakatnya <strong>2,5%</strong>. Nisab emas 85 gram.</li>
+                    <li>Pertanian: <strong>10%</strong> (air alami) atau <strong>5%</strong> (irigasi bayar).</li>
+                    <li>Harta Karun (Rikaz): Langsung dizakati <strong>20%</strong>.</li>
+                </ul>
+            </div>
+            <button onclick="showScreen('screen-menu')" class="mt-6 btn bg-red-400 hover:bg-red-500 text-white font-bold text-xl py-3 rounded-xl w-full">
+                KEMBALI KE MENU
+            </button>
+        </div>
+    </div>
+
+    <!-- Help Screen -->
+    <div id="screen-help" class="screen hidden-screen">
+        <div class="glass-panel rounded-3xl p-6 max-w-lg w-[90%]">
+            <h2 class="text-3xl font-display text-yellow-500 mb-4 text-center">❓ Petunjuk Permainan</h2>
+            <ol class="list-decimal pl-6 text-xl space-y-3 font-semibold text-gray-700">
+                <li>Baca soal di atas kepala tikus.</li>
+                <li>Pilih satu dari empat jawaban yang benar.</li>
+                <li>Jika BENAR, ular akan memakan tikus dan kamu dapat poin!</li>
+                <li>Jika SALAH, pelajari penjelasannya dan coba lagi.</li>
+                <li>Selesaikan semua soal untuk menjadi Juara Zakat!</li>
+            </ol>
+            <button onclick="showScreen('screen-menu')" class="mt-8 btn bg-red-400 hover:bg-red-500 text-white font-bold text-xl py-3 rounded-xl w-full">
+                MENGERTI!
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="screen-game" class="screen hidden-screen flex-col justify-start pt-4">
+        
+        <!-- HUD -->
+        <div class="w-full max-w-3xl px-4 flex justify-between items-center z-30">
+            <div class="bg-white px-4 py-2 rounded-xl shadow-md border-2 border-blue-200">
+                <div class="text-sm text-gray-500 font-bold">SOAL</div>
+                <div class="text-xl font-display text-blue-600"><span id="hud-q">1</span>/30</div>
+            </div>
+            <div class="bg-white px-6 py-2 rounded-xl shadow-md border-2 border-green-200 text-center">
+                <div class="text-sm text-gray-500 font-bold">SKOR</div>
+                <div class="text-2xl font-display text-green-500" id="hud-score">0</div>
+            </div>
+            <div class="bg-white px-4 py-2 rounded-xl shadow-md border-2 border-yellow-200 text-center">
+                <div class="text-sm text-gray-500 font-bold">COMBO</div>
+                <div class="text-xl font-display text-yellow-500">x<span id="hud-combo">0</span></div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="w-full max-w-3xl px-4 mt-3 z-30">
+            <div class="w-full bg-white rounded-full h-4 border-2 border-gray-200 overflow-hidden">
+                <div id="progress-bar" class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="flex-1 w-full max-w-3xl relative flex flex-col justify-end pb-24 px-4 game-layer" id="game-container">
+            
+            <!-- Quiz Box -->
+            <div class="w-full bg-white rounded-2xl p-4 shadow-xl border-4 border-blue-300 mb-4 z-40 transition-transform" id="quiz-box">
+                <p id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 text-center mb-4 leading-tight"></p>
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Options injected via JS -->
+                </div>
+                
+                <!-- Explanation / Retry Box (Hidden initially) -->
+                <div id="feedback-box" class="hidden flex-col items-center mt-4 p-4 rounded-xl border-4 text-center">
+                    <h3 id="feedback-title" class="text-2xl font-display mb-2"></h3>
+                    <p id="feedback-desc" class="text-lg font-semibold text-gray-700 mb-4"></p>
+                    <button id="btn-next-action" class="btn text-white font-bold text-xl py-2 px-6 rounded-xl hidden"></button>
+                </div>
+            </div>
+
+            <!-- Platform & Characters -->
+            <div id="platform-area" class="relative w-full h-40 flex items-end justify-between px-8 md:px-16 mt-auto">
+                <div class="platform absolute bottom-0 left-[5%] right-[5%] h-12"></div>
+                <!-- Ular -->
+                <div id="char-snake" class="character z-20 pb-10">🐍</div>
+                <!-- Tikus -->
+                <div id="char-mouse" class="character z-20 pb-10">🐭</div>
+            </div>
+            
+            <!-- Floating Messages -->
+            <div id="floating-msg" class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-display text-4xl text-center z-50 pointer-events-none opacity-0 transition-opacity duration-300 drop-shadow-lg text-white stroke-black"></div>
+
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="screen-result" class="screen hidden-screen">
+        <div class="glass-panel rounded-3xl p-8 max-w-lg w-[90%] text-center relative overflow-hidden">
+            <h2 class="text-4xl font-display text-green-500 mb-2">PERMAINAN SELESAI!</h2>
+            <div class="text-6xl mb-4" id="result-emoji">🏆</div>
+            <h3 class="text-2xl font-bold text-gray-600 mb-4">Gelar: <span id="result-title" class="text-blue-600 font-display">Juara Zakat</span></h3>
+            
+            <div class="bg-gray-100 rounded-xl p-4 mb-6">
+                <p class="text-lg font-bold text-gray-600">Total Skor</p>
+                <p class="text-5xl font-display text-green-500 mb-2" id="result-score">0</p>
+                <div class="flex justify-around text-lg font-bold">
+                    <span class="text-blue-500">Benar: <span id="result-correct">0</span></span>
+                    <span class="text-red-500">Salah: <span id="result-wrong">0</span></span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="startGame()" class="btn bg-green-500 hover:bg-green-600 text-white font-bold text-xl py-3 rounded-xl">
+                    MAIN LAGI
+                </button>
+                <button onclick="showScreen('screen-menu')" class="btn bg-gray-400 hover:bg-gray-500 text-white font-bold text-xl py-3 rounded-xl">
+                    MENU UTAMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionBank = [
+            {q:"Apa pengertian zakat mal?", o:["A. Sedekah biasa","B. Zakat harta tertentu sesuai syariat","C. Pajak negara","D. Hadiah ulang tahun"], a:1, exp:"Zakat mal adalah zakat atas harta tertentu yang wajib dikeluarkan apabila telah memenuhi syarat sesuai syariat Islam."},
+            {q:"Berapa persentase zakat mal untuk emas, perak, dan uang simpanan?", o:["A. 20%","B. 10%","C. 5%","D. 2,5%"], a:3, exp:"Tarif zakat untuk emas, perak, dan uang simpanan adalah 2,5% jika sudah mencapai nisab dan haul."},
+            {q:"Apa yang dimaksud dengan Mustahik?", o:["A. Orang yang membayar zakat","B. Orang yang berhak menerima zakat","C. Panitia zakat","D. Orang yang berhutang"], a:1, exp:"Mustahik adalah orang atau golongan yang berhak menerima zakat."},
+            {q:"Batas minimum harta yang menjadi syarat wajib zakat disebut...", o:["A. Haul","B. Nisab","C. Fidyah","D. Kifarat"], a:1, exp:"Nisab adalah batas minimum jumlah harta yang wajib dikeluarkan zakatnya."},
+            {q:"Syarat waktu kepemilikan harta selama satu tahun hijriah disebut...", o:["A. Nisab","B. Haul","C. Muallaf","D. Gharim"], a:1, exp:"Haul adalah masa kepemilikan harta selama satu tahun penuh."},
+            {q:"Orang yang wajib mengeluarkan zakat disebut...", o:["A. Mustahik","B. Muzaki","C. Amil","D. Fisabilillah"], a:1, exp:"Muzaki adalah orang Islam yang wajib mengeluarkan zakat."},
+            {q:"Ada berapa golongan (asnaf) yang berhak menerima zakat?", o:["A. 5","B. 6","C. 7","D. 8"], a:3, exp:"Dalam surat At-Taubah ayat 60, disebutkan ada 8 asnaf penerima zakat."},
+            {q:"Orang yang baru masuk Islam dan imannya masih lemah disebut...", o:["A. Fakir","B. Miskin","C. Muallaf","D. Riqab"], a:2, exp:"Muallaf adalah orang yang dibujuk hatinya atau baru masuk Islam."},
+            {q:"Panitia yang bertugas mengumpulkan dan membagikan zakat disebut...", o:["A. Amil","B. Gharim","C. Muzaki","D. Ibnu Sabil"], a:0, exp:"Amil adalah panitia pengelola zakat."},
+            {q:"Nisab untuk zakat emas adalah setara dengan...", o:["A. 595 gram","B. 85 gram","C. 93 gram","D. 100 gram"], a:1, exp:"Nisab zakat emas adalah 85 gram emas murni."},
+            {q:"Nisab untuk zakat perak adalah setara dengan...", o:["A. 595 gram","B. 85 gram","C. 200 gram","D. 1000 gram"], a:0, exp:"Nisab zakat perak adalah 595 gram perak murni."},
+            {q:"Zakat pertanian yang diairi dengan air hujan/sungai tanpa biaya, kadar zakatnya adalah...", o:["A. 2,5%","B. 5%","C. 10%","D. 20%"], a:2, exp:"Jika diairi dengan air hujan atau sungai alami (tanpa biaya), zakatnya 10%."},
+            {q:"Zakat pertanian yang diairi dengan irigasi berbayar, kadar zakatnya adalah...", o:["A. 5%","B. 10%","C. 2,5%","D. 20%"], a:0, exp:"Jika membutuhkan biaya untuk pengairan (irigasi pompa), zakatnya 5%."},
+            {q:"Barang temuan purbakala atau rikaz, wajib dikeluarkan zakatnya sebesar...", o:["A. 2,5%","B. 5%","C. 10%","D. 20%"], a:3, exp:"Rikaz atau harta karun wajib dizakati langsung saat ditemukan sebesar 20%."},
+            {q:"Nisab untuk peternakan sapi/kerbau dimulai pada jumlah...", o:["A. 20 ekor","B. 30 ekor","C. 40 ekor","D. 50 ekor"], a:1, exp:"Nisab sapi atau kerbau adalah 30 ekor."},
+            {q:"Nisab untuk peternakan kambing/domba dimulai pada jumlah...", o:["A. 20 ekor","B. 30 ekor","C. 40 ekor","D. 100 ekor"], a:2, exp:"Nisab kambing atau domba adalah 40 ekor."},
+            {q:"Apa arti dari Asnaf Gharim?", o:["A. Musafir","B. Panitia zakat","C. Orang yang memiliki banyak hutang untuk kebaikan","D. Hamba sahaya"], a:2, exp:"Gharim adalah orang yang terjerat hutang untuk kebutuhan hidup yang halal."},
+            {q:"Apa arti Ibnu Sabil?", o:["A. Pelajar/Musafir yang kehabisan bekal di perjalanan","B. Budak yang memerdekakan diri","C. Orang miskin","D. Orang kaya"], a:0, exp:"Ibnu Sabil adalah orang yang sedang dalam perjalanan jauh (musafir) dan kehabisan bekal."},
+            {q:"Apa arti Fisabilillah dalam penerima zakat?", o:["A. Berjuang di jalan Allah","B. Orang yang lari dari hutang","C. Pemilik harta karun","D. Pedagang pasar"], a:0, exp:"Fisabilillah adalah orang yang berjuang untuk agama Allah, seperti pendakwah atau pelajar agama."},
+            {q:"Perbedaan utama antara fakir dan miskin adalah...", o:["A. Miskin lebih sengsara dari fakir","B. Fakir tidak punya harta/pekerjaan, miskin punya tapi kurang","C. Keduanya sama saja","D. Fakir boleh meminta, miskin tidak"], a:1, exp:"Fakir sama sekali tidak punya sumber penghasilan, sedangkan miskin punya penghasilan tapi tidak cukup untuk kebutuhan dasar."},
+            {q:"Jika Pak Budi memiliki tabungan Rp 100.000.000 selama setahun, berapa zakatnya?", o:["A. Rp 2.500.000","B. Rp 5.000.000","C. Rp 1.000.000","D. Rp 10.000.000"], a:0, exp:"Rp 100.000.000 x 2,5% = Rp 2.500.000."},
+            {q:"Harta berikut yang TIDAK wajib dizakati adalah...", o:["A. Emas simpanan","B. Uang tunai di bank","C. Hasil panen padi","D. Rumah yang dipakai tinggal sendiri"], a:3, exp:"Harta yang dipakai untuk kebutuhan hidup sehari-hari seperti rumah tinggal dan kendaraan pribadi tidak wajib dizakati."},
+            {q:"Salah satu hikmah mengeluarkan zakat mal adalah...", o:["A. Mengurangi jumlah harta agar miskin","B. Membersihkan harta dan jiwa dari sifat kikir","C. Supaya dipuji tetangga","D. Memamerkan kekayaan"], a:1, exp:"Zakat berfungsi membersihkan harta kita dan menyucikan jiwa dari sifat serakah dan kikir."},
+            {q:"Kapan zakat mal (uang/emas/perniagaan) dikeluarkan?", o:["A. Hanya di bulan Ramadhan","B. Kapan saja ketika sudah mencapai nisab dan haul","C. Menjelang Idul Fitri saja","D. Setiap hari Jumat"], a:1, exp:"Zakat mal dikeluarkan kapan saja asalkan harta tersebut sudah mencapai nisab dan telah dimiliki selama satu tahun (haul)."},
+            {q:"Apakah zakat mal sama dengan zakat fitrah?", o:["A. Sama saja","B. Beda, fitrah berupa makanan pokok (beras), mal berupa harta kekayaan","C. Beda, fitrah 2,5%, mal 10%","D. Keduanya wajib bagi orang mati"], a:1, exp:"Zakat fitrah adalah zakat jiwa berupa makanan pokok, sedangkan zakat mal adalah zakat harta benda."},
+            {q:"Zakat perniagaan (barang dagangan) dihitung dari...", o:["A. Total keuntungan saja","B. Total aset dagang + keuntungan cair - hutang tempo","C. Modal awal saja","D. Jumlah barang rusak"], a:1, exp:"Zakat perniagaan dihitung dari modal berjalan, barang dagangan, dan keuntungan, dikurangi hutang yang jatuh tempo."},
+            {q:"Bagaimana hukum membayar zakat mal bagi muslim yang hartanya sudah memenuhi nisab dan haul?", o:["A. Sunnah muakkad","B. Mubah","C. Wajib/Fardhu ain","D. Makruh"], a:2, exp:"Hukumnya wajib (fardhu ain) bagi setiap muslim yang hartanya telah memenuhi syarat wajib zakat."},
+            {q:"Salah satu syarat harta yang dizakati adalah 'Milik Sempurna', artinya...", o:["A. Harta tersebut bebas dari hutang dan berada dalam penguasaannya","B. Harta pinjaman dari bank","C. Harta milik negara","D. Harta hasil curian"], a:0, exp:"Milik sempurna berarti harta itu dikuasai secara penuh dan bukan merupakan pinjaman atau titipan."},
+            {q:"Harta hasil korupsi atau curian jika dizakatkan hukumnya...", o:["A. Sah dan dapat pahala","B. Tidak sah dan tidak diterima karena berasal dari barang haram","C. Makruh","D. Sunnah"], a:1, exp:"Allah SWT Maha Suci dan hanya menerima sedekah/zakat dari harta yang halal dan baik."},
+            {q:"Apa yang terjadi jika seseorang sengaja menolak membayar zakat mal padahal ia mampu dan memenuhi syarat?", o:["A. Akan mendapat pahala ganda","B. Berdosa besar dan hartanya tidak berkah","C. Tidak apa-apa","D. Hartanya bertambah banyak"], a:1, exp:"Menolak membayar zakat adalah dosa besar karena melanggar salah satu Rukun Islam."}
+        ];
+
+        let currentQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let combo = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let isAudioOn = true;
+        let isAnimating = false;
+
+        const colors = ['bg-blue-400 hover:bg-blue-500', 'bg-green-400 hover:bg-green-500', 'bg-yellow-400 hover:bg-yellow-500', 'bg-purple-400 hover:bg-purple-500'];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden-screen'));
+            document.getElementById(screenId).classList.remove('hidden-screen');
+            if(screenId === 'screen-game' && audioCtx === null) initAudio();
+        }
+
+        function createBackgroundElements() {
+            const clouds = document.getElementById('clouds-container');
+            for(let i=0; i<4; i++) {
+                let cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.width = Math.random() * 100 + 100 + 'px';
+                cloud.style.height = '40px';
+                cloud.style.top = Math.random() * 30 + '%';
+                cloud.style.animationDuration = Math.random() * 20 + 20 + 's';
+                cloud.style.animationDelay = Math.random() * -30 + 's';
+                clouds.appendChild(cloud);
+            }
+
+            const leaves = document.getElementById('leaves-container');
+            for(let i=0; i<15; i++) {
+                let leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                leaf.style.left = Math.random() * 100 + 'vw';
+                leaf.style.animationDuration = Math.random() * 5 + 5 + 's';
+                leaf.style.animationDelay = Math.random() * -10 + 's';
+                leaves.appendChild(leaf);
+            }
+        }
+        createBackgroundElements();
+
+        let audioCtx = null;
+        let bgmOsc = null;
+        let bgmGain = null;
+
+        function initAudio() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // Setup BGM Nodes
+                bgmGain = audioCtx.createGain();
+                bgmGain.gain.value = isAudioOn ? 0.05 : 0;
+                bgmGain.connect(audioCtx.destination);
+                
+                startBGM();
+            } catch (e) { console.log("Web Audio API not supported"); }
+        }
+
+        function startBGM() {
+            if(!audioCtx) return;
+            const melody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C E G C G E
+            let noteIdx = 0;
+            
+            setInterval(() => {
+                if(!isAudioOn || !bgmGain) return;
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(melody[noteIdx], audioCtx.currentTime);
+                
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(bgmGain);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+                
+                noteIdx = (noteIdx + 1) % melody.length;
+            }, 400);
+        }
+
+        function playTone(freq, type, duration, vol=0.1) {
+            if(!audioCtx || !isAudioOn) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playJumpSFX() { playTone(400, 'sine', 0.2, 0.2); setTimeout(()=>playTone(600, 'sine', 0.3, 0.2), 100); }
+        function playWinSFX() { playTone(523.25, 'triangle', 0.1); setTimeout(()=>playTone(659.25, 'triangle', 0.1), 100); setTimeout(()=>playTone(783.99, 'triangle', 0.3), 200); }
+        function playLoseSFX() { playTone(200, 'sawtooth', 0.3, 0.2); setTimeout(()=>playTone(150, 'sawtooth', 0.4, 0.2), 200); }
+
+        function toggleAudio() {
+            isAudioOn = !isAudioOn;
+            document.getElementById('btn-audio').innerText = isAudioOn ? '🔊' : '🔇';
+            if(bgmGain) bgmGain.gain.value = isAudioOn ? 0.05 : 0;
+            if(isAudioOn && !audioCtx) initAudio();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            currentQuestions = shuffle([...questionBank]); 
+            currentQIndex = 0;
+            score = 0;
+            combo = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            
+            updateHUD();
+            showScreen('screen-game');
+            resetPlatform();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if(currentQIndex >= currentQuestions.length) {
+                endGame();
+                return;
+            }
+
+            isAnimating = false;
+            const q = currentQuestions[currentQIndex];
+            
+            document.getElementById('question-text').innerText = q.q;
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.o.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn ${colors[idx % colors.length]} text-white font-bold text-lg p-3 rounded-xl text-left w-full`;
+                btn.innerText = optText;
+                btn.onclick = () => checkAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('options-container').classList.remove('hidden');
+            document.getElementById('feedback-box').classList.add('hidden');
+            
+            // Progress
+            document.getElementById('progress-bar').style.width = `${(currentQIndex / currentQuestions.length) * 100}%`;
+            document.getElementById('hud-q').innerText = currentQIndex + 1;
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-score').innerText = score;
+            document.getElementById('hud-combo').innerText = combo;
+        }
+
+        function showFloatingMessage(text, colorClass) {
+            const msg = document.getElementById('floating-msg');
+            msg.innerText = text;
+            msg.className = `absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-display text-3xl md:text-5xl text-center z-50 pointer-events-none drop-shadow-lg text-white ${colorClass}`;
+            msg.style.opacity = 1;
+            msg.style.transform = 'translate(-50%, -80%) scale(1.2)';
+            
+            setTimeout(() => {
+                msg.style.opacity = 0;
+                msg.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 1500);
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('game-container');
+            for(let i=0; i<30; i++) {
+                let conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = '30%';
+                conf.style.backgroundColor = ['#ef4444', '#3b82f6', '#22c55e', '#eab308'][Math.floor(Math.random()*4)];
+                conf.style.transform = `rotate(${Math.random()*360}deg)`;
+                container.appendChild(conf);
+                
+                let fallDist = Math.random() * 200 + 100;
+                conf.animate([
+                    { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(${(Math.random()-0.5)*100}px, ${fallDist}px) rotate(360deg)`, opacity: 0 }
+                ], { duration: 1000 + Math.random()*1000, easing: 'cubic-bezier(.37,0,.63,1)' });
+                
+                setTimeout(() => conf.remove(), 2000);
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            if(isAnimating) return;
+            isAnimating = true;
+            
+            const q = currentQuestions[currentQIndex];
+            const isCorrect = (selectedIndex === q.a);
+            
+            document.getElementById('options-container').classList.add('hidden');
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.remove('hidden');
+            const btnNext = document.getElementById('btn-next-action');
+            btnNext.classList.remove('hidden');
+
+            if(isCorrect) {
+                // Correct Answer
+                correctCount++;
+                combo++;
+                score += 10 + (combo > 2 ? 5 : 0); // combo bonus
+                updateHUD();
+                
+                playWinSFX();
+                playJumpSFX();
+                
+                const snake = document.getElementById('char-snake');
+                snake.classList.add('snake-jump');
+                
+                setTimeout(() => {
+                    document.getElementById('char-mouse').style.opacity = '0';
+                    createConfetti();
+                    showFloatingMessage("HEBAT! 🎉", "text-green-500 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]");
+                }, 300);
+
+                feedbackBox.className = "flex flex-col items-center mt-4 p-4 rounded-xl border-4 border-green-400 bg-green-50 text-center";
+                document.getElementById('feedback-title').innerHTML = '<span class="text-green-600">JAWABAN BENAR!</span>';
+                document.getElementById('feedback-desc').innerText = q.exp;
+                
+                btnNext.className = "btn bg-green-500 hover:bg-green-600 text-white font-bold text-xl py-3 px-8 rounded-xl mt-2 inline-block";
+                btnNext.innerText = "LANJUTKAN ➔";
+                btnNext.onclick = () => { nextQuestion(); };
+
+            } else {
+                // Wrong Answer
+                wrongCount++;
+                combo = 0;
+                updateHUD();
+                
+                playLoseSFX();
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 500);
+                
+                const flash = document.getElementById('flash-effect');
+                flash.classList.add('flash-active');
+                setTimeout(() => flash.classList.remove('flash-active'), 500);
+
+                document.getElementById('char-mouse').classList.add('mouse-laugh');
+                showFloatingMessage("OOPS! 🐭", "text-red-500 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]");
+
+                feedbackBox.className = "flex flex-col items-center mt-4 p-4 rounded-xl border-4 border-red-400 bg-red-50 text-center";
+                document.getElementById('feedback-title').innerHTML = '<span class="text-red-600">KURANG TEPAT!</span>';
+                document.getElementById('feedback-desc').innerText = "Penjelasan: " + q.exp;
+                
+                btnNext.className = "btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold text-xl py-3 px-8 rounded-xl mt-2 inline-block";
+                btnNext.innerText = "COBA LAGI ↺";
+                btnNext.onclick = () => { resetPlatform(true); loadQuestion(); };
+            }
+        }
+
+        function resetPlatform(isRetry = false) {
+            const snake = document.getElementById('char-snake');
+            const mouse = document.getElementById('char-mouse');
+            
+            snake.classList.remove('snake-jump');
+            mouse.classList.remove('mouse-laugh');
+            mouse.style.opacity = '1';
+            
+            // Simple animation to slide out old platform and slide in new
+            const platformArea = document.getElementById('platform-area');
+            platformArea.style.transform = 'translateY(50px)';
+            platformArea.style.opacity = '0';
+            
+            setTimeout(() => {
+                platformArea.style.transform = 'translateY(0)';
+                platformArea.style.opacity = '1';
+            }, 300);
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            resetPlatform();
+            setTimeout(() => loadQuestion(), 300);
+        }
+
+        function endGame() {
+            showScreen('screen-result');
+            document.getElementById('result-score').innerText = score;
+            document.getElementById('result-correct').innerText = correctCount;
+            document.getElementById('result-wrong').innerText = wrongCount;
+            
+            let percentage = (correctCount / currentQuestions.length) * 100;
+            let title = "Pemula Zakat";
+            let emoji = "🌱";
+            
+            if(percentage === 100) { title = "Juara Zakat Sempurna!"; emoji = "🏆👑"; }
+            else if(percentage >= 80) { title = "Ahli Zakat"; emoji = "🏅"; }
+            else if(percentage >= 50) { title = "Penjelajah Zakat"; emoji = "⭐"; }
+
+            document.getElementById('result-title').innerText = title;
+            document.getElementById('result-emoji').innerText = emoji;
+            
+            if(percentage >= 50) playWinSFX();
+            else playLoseSFX();
+        }
+
+    </script>
+</body>
+</html>
